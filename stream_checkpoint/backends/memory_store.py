@@ -1,6 +1,6 @@
 """In-memory checkpoint store backend."""
 
-from typing import Dict, Optional
+from typing import Dict, Iterator, Optional
 
 from stream_checkpoint.base import BaseCheckpointStore, Checkpoint
 
@@ -60,6 +60,14 @@ class MemoryCheckpointStore(BaseCheckpointStore):
     def clear(self) -> None:
         """Remove all checkpoints from the store."""
         self._store.clear()
+
+    def list_stream_ids(self) -> Iterator[str]:
+        """Iterate over all stream IDs currently stored.
+
+        Returns:
+            An iterator of stream ID strings.
+        """
+        return iter(self._store)
 
     def __len__(self) -> int:
         """Return the number of checkpoints currently stored."""
