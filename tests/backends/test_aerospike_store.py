@@ -98,9 +98,11 @@ class TestAerospikeCheckpointStore:
             store.save(cp)
         results = store.list_checkpoints("pipeA")
         assert len(results) == 2
-        stream_ids = {r.stream_id for r in results}
+        stream_ids = {cp.stream_id for cp in results}
         assert stream_ids == {"s1", "s2"}
 
-    def test_key_format(self, store):
-        key = store._key("p", "s")
-        assert key == ("test_ns", "test_set", "p:s")
+    def test_list_checkpoints_returns_empty_for_unknown_pipeline(self, store):
+        cp1 = Checkpoint(pipeline_id="pipeA", stream_id="s1", offset=1)
+        store.save(cp1)
+        results = store.list_checkpoints("unknown_pipe")
+        assert results == []
