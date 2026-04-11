@@ -74,6 +74,17 @@ class TestSQLiteCheckpointStore:
         results = store.list_checkpoints("no-such-pipeline")
         assert results == []
 
+    def test_list_checkpoints_does_not_return_other_pipeline(self, store):
+        """Ensure list_checkpoints is scoped strictly to the requested pipeline."""
+        cp_target = Checkpoint(pipeline_id="pipe-A", stream_id="s1", offset=10)
+        cp_other = Checkpoint(pipeline_id="pipe-B", stream_id="s1", offset=20)
+        store.save(cp_target)
+        store.save(cp_other)
+
+        results = store.list_checkpoints("pipe-A")
+        assert len(results) == 1
+        assert results[0].pipeline_id == "pipe-A"
+
     def test_custom_table_name(self):
         s = SQLiteCheckpointStore(db_path=":memory:", table="my_checkpoints")
         cp = Checkpoint(pipeline_id="p", stream_id="s", offset=7)
