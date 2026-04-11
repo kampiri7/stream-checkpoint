@@ -67,3 +67,17 @@ class GCSCheckpointStore(BaseCheckpointStore):
             except Exception:
                 continue
         return checkpoints
+
+    def exists(self, pipeline_id: str, checkpoint_id: str) -> bool:
+        """Check whether a checkpoint exists without downloading its contents.
+
+        Args:
+            pipeline_id: The pipeline identifier.
+            checkpoint_id: The checkpoint identifier.
+
+        Returns:
+            True if the checkpoint blob exists in GCS, False otherwise.
+        """
+        key = self._key(pipeline_id, checkpoint_id)
+        blob = self._bucket.blob(key)
+        return blob.exists()
