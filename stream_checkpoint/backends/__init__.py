@@ -1,9 +1,7 @@
-"""Registry of available checkpoint store backends."""
+from typing import Dict, Type
+from stream_checkpoint.base import BaseCheckpointStore
 
-from typing import Any, Dict
-
-
-_BACKENDS = {
+_BACKENDS: Dict[str, str] = {
     "memory": "stream_checkpoint.backends.memory_store.MemoryCheckpointStore",
     "file": "stream_checkpoint.backends.file_store.FileCheckpointStore",
     "sqlite": "stream_checkpoint.backends.sqlite_store.SQLiteCheckpointStore",
@@ -19,31 +17,34 @@ _BACKENDS = {
     "zookeeper": "stream_checkpoint.backends.zookeeper_store.ZookeeperCheckpointStore",
     "consul": "stream_checkpoint.backends.consul_store.ConsulCheckpointStore",
     "firestore": "stream_checkpoint.backends.firestore_store.FirestoreCheckpointStore",
+    "cassandra": "stream_checkpoint.backends.cassandra_store.CassandraCheckpointStore",
+    "hbase": "stream_checkpoint.backends.hbase_store.HBaseCheckpointStore",
 }
 
 
-def get_backend(name: str, **kwargs: Any):
-    """
-    Instantiate a checkpoint store backend by name.
+def list_backends():
+    """Return a list of all registered backend names."""
+    return list(_BACKENDS.keys())
 
-    :param name: Backend identifier (e.g. ``"redis"``, ``"firestore"``).
-    :param kwargs: Constructor arguments forwarded to the backend class.
-    :returns: An instance of the requested :class:`BaseCheckpointStore`.
-    :raises ValueError: If *name* is not a registered backend.
+
+def get_backend(name: str) -> Type[BaseCheckpointStore]:
+    """Retrieve a backend class by name.
+
+    Args:
+        name: The registered backend identifier (e.g. ``"redis"``).
+
+    Returns:
+        The corresponding :class:`BaseCheckpointStore` subclass.
+
+    Raises:
+        KeyError: If *name* is not a registered backend.
+        ImportError: If the backend's dependencies are not installed.
     """
     if name not in _BACKENDS:
-        available = ", ".join(sorted(_BACKENDS))
-        raise ValueError(
-            f"Unknown backend '{name}'. Available backends: {available}"
+        raise KeyError(
+            f"Unknown backend '{name}'. Available backends: {list_backends()}"
         )
-
     module_path, class_name = _BACKENDS[name].rsplit(".", 1)
     import importlib
     module = importlib.import_module(module_path)
-    cls = getattr(module, class_name)
-    return cls(**kwargs)
-
-
-def list_backends() -> list:
-    """Return a sorted list of registered backend names."""
-    return sorted(_BACKENDS.keys())
+    return getattr(module, class_name)
