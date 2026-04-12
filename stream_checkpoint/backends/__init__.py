@@ -1,4 +1,4 @@
-"""Backend registry for stream-checkpoint."""
+"""Registry of available checkpoint store backends."""
 
 from typing import List, Type
 
@@ -7,7 +7,9 @@ from stream_checkpoint.base import BaseCheckpointStore
 _REGISTRY = {
     "aerospike": "stream_checkpoint.backends.aerospike_store.AerospikeCheckpointStore",
     "azure": "stream_checkpoint.backends.azure_store.AzureCheckpointStore",
+    "bigtable": "stream_checkpoint.backends.bigtable_store.BigtableCheckpointStore",
     "cassandra": "stream_checkpoint.backends.cassandra_store.CassandraCheckpointStore",
+    "cockroachdb": "stream_checkpoint.backends.cockroachdb_store.CockroachDBCheckpointStore",
     "consul": "stream_checkpoint.backends.consul_store.ConsulCheckpointStore",
     "couchbase": "stream_checkpoint.backends.couchbase_store.CouchbaseCheckpointStore",
     "couchdb": "stream_checkpoint.backends.couchdb_store.CouchDBCheckpointStore",
@@ -34,6 +36,7 @@ _REGISTRY = {
     "redis_ttl": "stream_checkpoint.backends.redis_ttl_store.RedisTTLCheckpointStore",
     "s3": "stream_checkpoint.backends.s3_store.S3CheckpointStore",
     "scylladb": "stream_checkpoint.backends.scylladb_store.ScyllaDBCheckpointStore",
+    "spanner": "stream_checkpoint.backends.spanner_store.SpannerCheckpointStore",
     "sqlite": "stream_checkpoint.backends.sqlite_store.SQLiteCheckpointStore",
     "tigris": "stream_checkpoint.backends.tigris_store.TigrisCheckpointStore",
     "tigris_ttl": "stream_checkpoint.backends.tigris_store_ttl.TigrisTTLCheckpointStore",
@@ -48,15 +51,14 @@ def list_backends() -> List[str]:
 
 
 def get_backend(name: str) -> Type[BaseCheckpointStore]:
-    """Return the checkpoint store class for *name*.
+    """Return the checkpoint store class for the given backend name.
 
     Raises:
-        KeyError: If *name* is not a registered backend.
+        KeyError: If the backend name is not registered.
     """
     if name not in _REGISTRY:
         raise KeyError(f"Unknown backend: {name!r}. Available: {list_backends()}")
     module_path, class_name = _REGISTRY[name].rsplit(".", 1)
     import importlib
-
     module = importlib.import_module(module_path)
     return getattr(module, class_name)
