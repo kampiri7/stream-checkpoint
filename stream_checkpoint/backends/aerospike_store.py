@@ -59,6 +59,19 @@ class AerospikeCheckpointStore(BaseCheckpointStore):
         except Exception:
             pass
 
+    def exists(self, pipeline_id: str, stream_id: str) -> bool:
+        """Return ``True`` if a checkpoint exists for the given IDs.
+
+        Uses ``client.exists`` rather than a full ``client.get`` to avoid
+        transferring the record payload when only presence is needed.
+        """
+        key = self._key(pipeline_id, stream_id)
+        try:
+            _, meta = self._client.exists(key)
+            return meta is not None
+        except Exception:
+            return False
+
     def list_checkpoints(self, pipeline_id: str):
         results = []
         scan = self._client.scan(self._namespace, self._set)
