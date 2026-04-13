@@ -1,4 +1,4 @@
-"""Registry of available checkpoint store backends."""
+"""Backend registry for stream-checkpoint."""
 
 from typing import List, Type
 
@@ -25,10 +25,14 @@ _REGISTRY = {
     "hbase": "stream_checkpoint.backends.hbase_store.HBaseCheckpointStore",
     "influxdb": "stream_checkpoint.backends.influxdb_store.InfluxDBCheckpointStore",
     "kafka": "stream_checkpoint.backends.kafka_store.KafkaCheckpointStore",
+    "keydb": "stream_checkpoint.backends.keydb_store.KeyDBCheckpointStore",
     "memcached": "stream_checkpoint.backends.memcached_store.MemcachedCheckpointStore",
     "memory": "stream_checkpoint.backends.memory_store.MemoryCheckpointStore",
+    "momento": "stream_checkpoint.backends.momento_store.MomentoCheckpointStore",
     "mongodb": "stream_checkpoint.backends.mongodb_store.MongoDBCheckpointStore",
     "nats": "stream_checkpoint.backends.nats_store.NATSCheckpointStore",
+    "neon": "stream_checkpoint.backends.neon_store.NeonCheckpointStore",
+    "planetscale": "stream_checkpoint.backends.planetscale_store.PlanetScaleCheckpointStore",
     "postgres": "stream_checkpoint.backends.postgres_store.PostgresCheckpointStore",
     "pulsar": "stream_checkpoint.backends.pulsar_store.PulsarCheckpointStore",
     "rabbitmq": "stream_checkpoint.backends.rabbitmq_store.RabbitMQCheckpointStore",
@@ -38,8 +42,12 @@ _REGISTRY = {
     "scylladb": "stream_checkpoint.backends.scylladb_store.ScyllaDBCheckpointStore",
     "spanner": "stream_checkpoint.backends.spanner_store.SpannerCheckpointStore",
     "sqlite": "stream_checkpoint.backends.sqlite_store.SQLiteCheckpointStore",
+    "surrealdb": "stream_checkpoint.backends.surrealdb_store.SurrealDBCheckpointStore",
+    "tidb": "stream_checkpoint.backends.tidb_store.TiDBCheckpointStore",
     "tigris": "stream_checkpoint.backends.tigris_store.TigrisCheckpointStore",
     "tigris_ttl": "stream_checkpoint.backends.tigris_store_ttl.TigrisTTLCheckpointStore",
+    "turso": "stream_checkpoint.backends.turso_store.TursoCheckpointStore",
+    "upstash": "stream_checkpoint.backends.upstash_store.UpstashCheckpointStore",
     "valkey": "stream_checkpoint.backends.valkey_store.ValkeyCheckpointStore",
     "zookeeper": "stream_checkpoint.backends.zookeeper_store.ZookeeperCheckpointStore",
 }
@@ -51,7 +59,7 @@ def list_backends() -> List[str]:
 
 
 def get_backend(name: str) -> Type[BaseCheckpointStore]:
-    """Return the checkpoint store class for the given backend name.
+    """Return the backend class for the given name.
 
     Raises:
         KeyError: If the backend name is not registered.
@@ -60,5 +68,6 @@ def get_backend(name: str) -> Type[BaseCheckpointStore]:
         raise KeyError(f"Unknown backend: {name!r}. Available: {list_backends()}")
     module_path, class_name = _REGISTRY[name].rsplit(".", 1)
     import importlib
+
     module = importlib.import_module(module_path)
     return getattr(module, class_name)
