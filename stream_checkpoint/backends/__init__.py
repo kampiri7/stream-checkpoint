@@ -1,14 +1,12 @@
-"""Backend registry for stream-checkpoint."""
+"""Registry of all available checkpoint-store backends."""
+from __future__ import annotations
 
-from typing import Type
-
-from stream_checkpoint.base import BaseCheckpointStore
-
-_REGISTRY: dict[str, str] = {
+_BACKENDS: dict[str, str] = {
     "aerospike": "stream_checkpoint.backends.aerospike_store.AerospikeCheckpointStore",
     "azure": "stream_checkpoint.backends.azure_store.AzureCheckpointStore",
     "bigtable": "stream_checkpoint.backends.bigtable_store.BigtableCheckpointStore",
     "cassandra": "stream_checkpoint.backends.cassandra_store.CassandraCheckpointStore",
+    "clickhouse": "stream_checkpoint.backends.clickhouse_store.ClickHouseCheckpointStore",
     "cockroachdb": "stream_checkpoint.backends.cockroachdb_store.CockroachDBCheckpointStore",
     "consul": "stream_checkpoint.backends.consul_store.ConsulCheckpointStore",
     "couchbase": "stream_checkpoint.backends.couchbase_store.CouchbaseCheckpointStore",
@@ -22,11 +20,12 @@ _REGISTRY: dict[str, str] = {
     "firestore": "stream_checkpoint.backends.firestore_store.FirestoreCheckpointStore",
     "firestore_ttl": "stream_checkpoint.backends.firestore_ttl_store.FirestoreTTLCheckpointStore",
     "gcs": "stream_checkpoint.backends.gcs_store.GCSCheckpointStore",
-    "hazelcast": "stream_checkpoint.backends.hazelcast_store.HazelcastCheckpointStore",
     "hbase": "stream_checkpoint.backends.hbase_store.HBaseCheckpointStore",
+    "hazelcast": "stream_checkpoint.backends.hazelcast_store.HazelcastCheckpointStore",
     "influxdb": "stream_checkpoint.backends.influxdb_store.InfluxDBCheckpointStore",
     "kafka": "stream_checkpoint.backends.kafka_store.KafkaCheckpointStore",
     "keydb": "stream_checkpoint.backends.keydb_store.KeyDBCheckpointStore",
+    "leveldb": "stream_checkpoint.backends.leveldb_store.LevelDBCheckpointStore",
     "lmdb": "stream_checkpoint.backends.lmdb_store.LMDBCheckpointStore",
     "memcached": "stream_checkpoint.backends.memcached_store.MemcachedCheckpointStore",
     "memory": "stream_checkpoint.backends.memory_store.MemoryCheckpointStore",
@@ -59,20 +58,23 @@ _REGISTRY: dict[str, str] = {
 
 
 def list_backends() -> list[str]:
-    """Return a sorted list of all registered backend names."""
-    return sorted(_REGISTRY.keys())
+    """Return a sorted list of registered backend names."""
+    return sorted(_BACKENDS.keys())
 
 
-def get_backend(name: str) -> Type[BaseCheckpointStore]:
-    """Return the checkpoint store class for *name*.
+def get_backend(name: str):
+    """Return the checkpoint-store class for *name*.
 
-    Raises:
-        KeyError: if *name* is not a registered backend.
+    Raises
+    ------
+    KeyError
+        If *name* is not a registered backend.
     """
-    if name not in _REGISTRY:
-        raise KeyError(f"Unknown backend: {name!r}. Available: {list_backends()}")
-
-    module_path, class_name = _REGISTRY[name].rsplit(".", 1)
+    if name not in _BACKENDS:
+        raise KeyError(
+            f"Unknown backend {name!r}. Available backends: {list_backends()}"
+        )
+    module_path, class_name = _BACKENDS[name].rsplit(".", 1)
     import importlib
 
     module = importlib.import_module(module_path)
