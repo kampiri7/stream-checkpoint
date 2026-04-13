@@ -60,3 +60,18 @@ class BaseCheckpointStore(ABC):
     def exists(self, stream_id: str) -> bool:
         """Check whether a checkpoint exists for the given stream."""
         ...
+
+    def update_offset(self, stream_id: str, offset: Any) -> Optional[Checkpoint]:
+        """Update only the offset of an existing checkpoint.
+
+        Loads the current checkpoint for the stream, updates its offset and
+        ``updated_at`` timestamp, persists it, and returns the updated
+        checkpoint.  Returns ``None`` if no checkpoint exists for the stream.
+        """
+        checkpoint = self.load(stream_id)
+        if checkpoint is None:
+            return None
+        checkpoint.offset = offset
+        checkpoint.updated_at = datetime.utcnow()
+        self.save(checkpoint)
+        return checkpoint
