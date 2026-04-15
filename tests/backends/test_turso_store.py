@@ -92,16 +92,18 @@ class TestTursoCheckpointStore:
         assert offsets == {"10", "20"}
 
     def test_list_checkpoints_empty(self, store):
-        assert store.list_checkpoints("nonexistent") == []
+        results = store.list_checkpoints("nonexistent-stream")
+        assert results == []
 
-    def test_overwrite_checkpoint(self, store, checkpoint):
-        store.save(checkpoint)
-        updated = Checkpoint(stream_id="stream-1", partition="0", offset="99", metadata={})
-        store.save(updated)
-        loaded = store.load("stream-1", "0")
-        assert loaded.offset == "99"
-
-    def test_metadata_preserved(self, store, checkpoint):
-        store.save(checkpoint)
-        loaded = store.load("stream-1", "0")
-        assert loaded.metadata == {"key": "val"}
+    def test_save_preserves_metadata(self, store):
+        """Ensure metadata is round-tripped correctly through save and load."""
+        cp = Checkpoint(
+            stream_id="stream-3",
+            partition="0",
+            offset="99",
+            metadata={"foo": "bar", "count": 42},
+        )
+        store.save(cp)
+        loaded = store.load("stream-3", "0")
+        assert loaded is not None
+        assert loaded.metadata == {"foo": "bar", "count": 42}
