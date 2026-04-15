@@ -1,8 +1,12 @@
-"""Registry of all available checkpoint-store backends."""
-from __future__ import annotations
+"""Pluggable storage backend registry for stream-checkpoint."""
 
-_BACKENDS: dict[str, str] = {
+from typing import List, Type
+
+from stream_checkpoint.base import BaseCheckpointStore
+
+_REGISTRY: dict = {
     "aerospike": "stream_checkpoint.backends.aerospike_store.AerospikeCheckpointStore",
+    "arangodb": "stream_checkpoint.backends.arangodb_store.ArangoDBCheckpointStore",
     "azure": "stream_checkpoint.backends.azure_store.AzureCheckpointStore",
     "bigtable": "stream_checkpoint.backends.bigtable_store.BigtableCheckpointStore",
     "cassandra": "stream_checkpoint.backends.cassandra_store.CassandraCheckpointStore",
@@ -32,10 +36,12 @@ _BACKENDS: dict[str, str] = {
     "momento": "stream_checkpoint.backends.momento_store.MomentoCheckpointStore",
     "mongodb": "stream_checkpoint.backends.mongodb_store.MongoDBCheckpointStore",
     "nats": "stream_checkpoint.backends.nats_store.NATSCheckpointStore",
+    "neo4j": "stream_checkpoint.backends.neo4j_store.Neo4jCheckpointStore",
     "neon": "stream_checkpoint.backends.neon_store.NeonCheckpointStore",
     "planetscale": "stream_checkpoint.backends.planetscale_store.PlanetScaleCheckpointStore",
     "postgres": "stream_checkpoint.backends.postgres_store.PostgresCheckpointStore",
     "pulsar": "stream_checkpoint.backends.pulsar_store.PulsarCheckpointStore",
+    "qdrant": "stream_checkpoint.backends.qdrant_store.QdrantCheckpointStore",
     "rabbitmq": "stream_checkpoint.backends.rabbitmq_store.RabbitMQCheckpointStore",
     "redis": "stream_checkpoint.backends.redis_store.RedisCheckpointStore",
     "redis_ttl": "stream_checkpoint.backends.redis_ttl_store.RedisTTLCheckpointStore",
@@ -47,35 +53,32 @@ _BACKENDS: dict[str, str] = {
     "sqlite": "stream_checkpoint.backends.sqlite_store.SQLiteCheckpointStore",
     "supabase": "stream_checkpoint.backends.supabase_store.SupabaseCheckpointStore",
     "surrealdb": "stream_checkpoint.backends.surrealdb_store.SurrealDBCheckpointStore",
+    "tarantool": "stream_checkpoint.backends.tarantool_store.TarantoolCheckpointStore",
     "tidb": "stream_checkpoint.backends.tidb_store.TiDBCheckpointStore",
     "tigris": "stream_checkpoint.backends.tigris_store.TigrisCheckpointStore",
     "tigris_ttl": "stream_checkpoint.backends.tigris_store_ttl.TigrisTTLCheckpointStore",
     "turso": "stream_checkpoint.backends.turso_store.TursoCheckpointStore",
     "upstash": "stream_checkpoint.backends.upstash_store.UpstashCheckpointStore",
     "valkey": "stream_checkpoint.backends.valkey_store.ValkeyCheckpointStore",
+    "weaviate": "stream_checkpoint.backends.weaviate_store.WeaviateCheckpointStore",
     "zookeeper": "stream_checkpoint.backends.zookeeper_store.ZookeeperCheckpointStore",
 }
 
 
-def list_backends() -> list[str]:
-    """Return a sorted list of registered backend names."""
-    return sorted(_BACKENDS.keys())
+def list_backends() -> List[str]:
+    """Return a sorted list of all registered backend names."""
+    return sorted(_REGISTRY.keys())
 
 
-def get_backend(name: str):
-    """Return the checkpoint-store class for *name*.
+def get_backend(name: str) -> Type[BaseCheckpointStore]:
+    """Return the backend class registered under *name*.
 
-    Raises
-    ------
-    KeyError
-        If *name* is not a registered backend.
+    Raises:
+        KeyError: If *name* is not a registered backend.
     """
-    if name not in _BACKENDS:
-        raise KeyError(
-            f"Unknown backend {name!r}. Available backends: {list_backends()}"
-        )
-    module_path, class_name = _BACKENDS[name].rsplit(".", 1)
+    if name not in _REGISTRY:
+        raise KeyError(f"Unknown backend: {name!r}. Available: {list_backends()}")
+    module_path, class_name = _REGISTRY[name].rsplit(".", 1)
     import importlib
-
     module = importlib.import_module(module_path)
     return getattr(module, class_name)
