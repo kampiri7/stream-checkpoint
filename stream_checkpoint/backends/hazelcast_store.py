@@ -51,3 +51,17 @@ class HazelcastCheckpointStore(BaseCheckpointStore):
                 if value is not None:
                     results.append(Checkpoint.from_dict(json.loads(value)))
         return results
+
+    def exists(self, pipeline_id: str, stream_id: str) -> bool:
+        """Check whether a checkpoint exists without fetching its full value.
+
+        Args:
+            pipeline_id: The pipeline identifier.
+            stream_id: The stream identifier.
+
+        Returns:
+            True if a checkpoint exists for the given pipeline/stream pair,
+            False otherwise.
+        """
+        key = self._key(pipeline_id, stream_id)
+        return self._map.contains_key(key)
